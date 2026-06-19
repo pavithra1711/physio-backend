@@ -1,33 +1,53 @@
 package com.physio.backend.service;
 
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.SimpleMailMessage;
+import okhttp3.*;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private static final String URL = "https://api.resend.com/emails";
+    private final OkHttpClient client = new OkHttpClient();
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
-    }
+    public void send(String name, String email, String messageBody) {
 
-    public void send(String messageBody) {
+        System.out.println("RESEND KEY: " + System.getenv("RESEND_API_KEY"));
+
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
+            String json = "{"
+                    + "\"from\":\"Physio Clinic <onboarding@resend.dev>\","
+                    + "\"to\":\"sripavithra1711@gmail.com\","
+                    + "\"subject\":\"New Clinic Inquiry\","
+                    + "\"text\":\"Name: " + name + "\\nEmail: " + email + "\\nMessage: " + messageBody + "\""
+                    + "}";
 
-            message.setTo("sripavithra1711@gmail.com");
-            message.setSubject("New Clinic Inquiry");
-            message.setText(messageBody);
+            RequestBody body = RequestBody.create(
+                    json,
+                    MediaType.get("application/json")
+            );
 
-            mailSender.send(message);
+            Request request = new Request.Builder()
+                    .url(URL)
+                    .addHeader("Authorization", "Bearer " + System.getenv("RESEND_API_KEY"))
+                    .addHeader("Content-Type", "application/json")
+                    .post(body)
+                    .build();
 
-            System.out.println("Email sent successfully!");
+            try (Response response = client.newCall(request).execute()) {
+
+                System.out.println("STATUS: " + response.code());
+                System.out.println("BODY: " + response.body().string());
+
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Email failed: " + response.body().string());
+                }
+
+                System.out.println("Email sent successfully via Resend!");
+            }
+
         } catch (Exception e) {
-            System.err.println("EMAIL FAILED:");
             e.printStackTrace();
-            throw e; // ensures Spring still returns 500
+            throw new RuntimeException(e);
         }
     }
 }
