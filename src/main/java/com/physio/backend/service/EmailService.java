@@ -35,11 +35,15 @@ public class EmailService {
 
             try (Response response = client.newCall(request).execute()) {
 
+                String responseBody = response.body() != null
+                        ? response.body().string()
+                        : "";
+
                 System.out.println("STATUS: " + response.code());
-                System.out.println("BODY: " + response.body().string());
+                System.out.println("BODY: " + responseBody);
 
                 if (!response.isSuccessful()) {
-                    throw new RuntimeException("Email failed: " + response.body().string());
+                    throw new RuntimeException("Email failed: " + responseBody);
                 }
 
                 System.out.println("Email sent successfully via Resend!");
