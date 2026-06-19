@@ -14,15 +14,20 @@ public class EmailService {
     }
 
     public void send(String messageBody) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
 
-        SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo("sripavithra1711@gmail.com");
+            message.setSubject("New Clinic Inquiry");
+            message.setText(messageBody);
 
-        message.setTo("sripavithra1711@gmail.com");
-        message.setSubject("New Clinic Inquiry");
-        message.setText(messageBody);
+            mailSender.send(message);
 
-        mailSender.send(message);
-
-        System.out.println("Email sent successfully!");
+            System.out.println("Email sent successfully!");
+        } catch (Exception e) {
+            System.err.println("EMAIL FAILED:");
+            e.printStackTrace();
+            throw e; // ensures Spring still returns 500
+        }
     }
 }
