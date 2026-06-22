@@ -1,34 +1,57 @@
 package com.physio.backend.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    private static final String URL = "https://api.resend.com/emails";
+    private static final String RESEND_URL = "https://api.resend.com/emails";
+
     private final OkHttpClient client = new OkHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public void send(String name, String email, String messageBody) {
 
-        System.out.println("RESEND KEY: " + System.getenv("RESEND_API_KEY"));
-
         try {
-            String json = "{"
-                    + "\"from\":\"Physio Clinic <onboarding@resend.dev>\","
-                    + "\"to\":\"sripavithra1711@gmail.com\","
-                    + "\"subject\":\"New Clinic Inquiry\","
-                    + "\"text\":\"Name: " + name + "\\nEmail: " + email + "\\nMessage: " + messageBody + "\""
-                    + "}";
+
+            String apiKey = System.getenv("RESEND_API_KEY");
+
+            if (apiKey == null || apiKey.isBlank()) {
+                throw new RuntimeException("RESEND_API_KEY is not configured");
+            }
+
+            Map<String, Object> payload = new HashMap<>();
+
+            // TEST MODE
+            payload.put("from", "Physio Clinic <onboarding@resend.dev>");
+            payload.put("to", "1711.pavithra@gmail.com");
+            payload.put("subject", "New Clinic Inquiry");
+
+            payload.put(
+                    "text",
+                    "Name: " + name +
+                    "\nEmail: " + email +
+                    "\nMessage: " + messageBody
+            );
+
+            String json = objectMapper.writeValueAsString(payload);
+
+            System.out.println("===== RESEND REQUEST =====");
+            System.out.println(json);
 
             RequestBody body = RequestBody.create(
                     json,
-                    MediaType.get("application/json")
+                    MediaType.parse("application/json")
             );
 
             Request request = new Request.Builder()
-                    .url(URL)
-                    .addHeader("Authorization", "Bearer " + System.getenv("RESEND_API_KEY"))
+                    .url(RESEND_URL)
+                    .addHeader("Authorization", "Bearer " + apiKey)
                     .addHeader("Content-Type", "application/json")
                     .post(body)
                     .build();
@@ -39,19 +62,22 @@ public class EmailService {
                         ? response.body().string()
                         : "";
 
-                System.out.println("STATUS: " + response.code());
-                System.out.println("BODY: " + responseBody);
+                System.out.println("===== RESEND RESPONSE =====");
+                System.out.println("Status: " + response.code());
+                System.out.println("Body: " + responseBody);
 
                 if (!response.isSuccessful()) {
-                    throw new RuntimeException("Email failed: " + responseBody);
+                    throw new RuntimeException(
+                            "Resend API Error (" + response.code() + "): " + responseBody
+                    );
                 }
 
-                System.out.println("Email sent successfully via Resend!");
+                System.out.println("Email sent successfully!");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to send email", e);
         }
     }
 }
