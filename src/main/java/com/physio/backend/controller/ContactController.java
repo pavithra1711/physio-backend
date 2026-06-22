@@ -21,11 +21,13 @@ public class ContactController {
     @PostMapping("/contact")
     public ResponseEntity<String> contact(@RequestBody ContactRequest request) {
 
-        emailService.send(
-            request.getName(),
-            request.getEmail(),
-            request.getMessage()
-        );
+    	 emailService.send(
+    		        request.getName(),
+    		        request.getEmail(),
+    		        request.getMobile(),
+    		        request.getService(),
+    		        request.getMessage()
+    		    );
 
         return ResponseEntity.ok("Message received");
     }
@@ -36,6 +38,8 @@ public class ContactController {
         emailService.send(
             "Test User",
             "test@gmail.com",
+            "919150520567",
+            "Back Pain Treatment",
             "Test email from Physio Clinic System"
         );
 
