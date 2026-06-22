@@ -15,7 +15,7 @@ public class EmailService {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public void send(String name, String email, String messageBody) {
+    public void send(String name, String email, String mobile, String service, String messageBody) {
 
         try {
 
@@ -27,17 +27,19 @@ public class EmailService {
 
             Map<String, Object> payload = new HashMap<>();
 
-            // TEST MODE
             payload.put("from", "Physio Clinic <onboarding@resend.dev>");
             payload.put("to", "1711.pavithra@gmail.com");
             payload.put("subject", "New Clinic Inquiry");
 
             payload.put(
-                    "text",
-                    "Name: " + name +
-                    "\nEmail: " + email +
-                    "\nMessage: " + messageBody
-            );
+            	    "text",
+            	    "New Clinic Inquiry\n\n" +
+            	    "Name: " + name + "\n" +
+            	    "Mobile: " + mobile + "\n" +
+            	    "Service: " + service + "\n" +
+            	    "Email: " + email + "\n" +
+            	    "Message: " + messageBody
+            	);
 
             String json = objectMapper.writeValueAsString(payload);
 
